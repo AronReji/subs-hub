@@ -4,7 +4,7 @@ import { AuthProvider } from "@/lib/auth-context";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "SubHub | Brightloop Subscription Management",
+  title: "Brightloop | Subscription Management",
   description: "Unified subscription management platform for handling plans, recurring billing, invoicing, payments, and revenue analytics.",
 };
 

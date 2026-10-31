@@ -349,7 +349,6 @@ function SubscriptionDetailInner({ params }: PageProps) {
                 ? "Generate a proposal or contract from quotation templates with product and variant lines."
                 : `Customer: ${sub?.customerName} (${sub?.customerCompany})`
             }
-            badge={isNew ? "New Contract" : sub?.status}
             actions={
               !isNew &&
               sub && (
@@ -417,7 +416,7 @@ function SubscriptionDetailInner({ params }: PageProps) {
         {!isNew && sub && (
           <div className="bg-white border border-[#dee2e6] rounded-2xl p-4 shadow-xs">
             <div className="flex items-center justify-between text-xs font-semibold text-[#6c757d] mb-3">
-              <span>Contract Lifecycle Pipeline (Scene 3 Specification):</span>
+              <span>Contract Lifecycle Pipeline:</span>
               <span className="font-mono text-[#212529]">Current State: {sub.status}</span>
             </div>
             <div className="grid grid-cols-5 gap-2 relative">

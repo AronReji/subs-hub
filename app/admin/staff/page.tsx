@@ -55,12 +55,11 @@ export default function StaffManagementPage() {
     <div className="space-y-6">
       <PageHeader
         title="Staff Management"
-        description="Provision and control internal team members with access to subscriptions, customer accounts, and billing operations."
-        badge="Admin Only"
+        description="Provision and control team members with access to subscriptions, customer accounts, and billing operations."
         actions={
           <button
             onClick={() => setIsModalOpen(true)}
-            className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold px-3.5 py-2 rounded-xl shadow-md shadow-indigo-600/30 transition-all cursor-pointer"
+            className="inline-flex items-center gap-2 bg-[#343a40] hover:bg-[#212529] text-[#f8f9fa] text-xs font-semibold px-3.5 py-2 rounded-xl shadow-xs transition-all cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" />
             Add Staff Member

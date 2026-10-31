@@ -63,7 +63,6 @@ function SubscriptionsListContent() {
       <PageHeader
         title="Subscriptions"
         description="Manage lifecycle statuses (Draft → Quotation → Confirmed → Active → Closed) and configure recurring contracts."
-        badge="Shared: Admin & Staff"
         actions={
           <Link
             href="/subscriptions/new"

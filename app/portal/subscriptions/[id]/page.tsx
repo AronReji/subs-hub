@@ -115,7 +115,6 @@ export default function CustomerPortalSubscriptionDetailPage({ params }: PagePro
           <PageHeader
             title={`Subscription ${sub.subscriptionNumber}`}
             description={`Plan: ${sub.planName} • Cadence: ${sub.billingPeriod}`}
-            badge="Customer Self-Service"
           />
         </div>
 

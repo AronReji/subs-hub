@@ -40,7 +40,7 @@ export function validatePassword(password: string): { valid: boolean; reason?: s
   return { valid: true };
 }
 
-const STORAGE_KEY = "subhub_auth_session_v1";
+const STORAGE_KEY = "brightloop_auth_session_v1";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);

@@ -192,11 +192,8 @@ export default function InvoiceDetailPage({ params }: PageProps) {
           {/* Header */}
           <div className="flex justify-between items-start border-b border-[#dee2e6] pb-6 flex-wrap gap-4">
             <div>
-              <div className="text-2xl font-bold tracking-tight text-[#212529] flex items-center gap-2">
-                <span>Brightloop Software</span>
-                <span className="text-xs font-normal text-[#495057] bg-[#e9ecef] px-2 py-0.5 rounded-full border border-[#ced4da]">
-                  SubHub Invoicing
-                </span>
+              <div className="text-2xl font-bold tracking-tight text-[#212529]">
+                Brightloop Software
               </div>
               <p className="text-xs text-[#6c757d] mt-1">100 Tech Blvd, Innovation Tower, Suite 500</p>
               <p className="text-xs text-[#6c757d]">billing@brightloop.com</p>
@@ -264,9 +261,8 @@ export default function InvoiceDetailPage({ params }: PageProps) {
           {/* Financial Summary */}
           <div className="flex justify-between items-start flex-wrap gap-4 pt-4 border-t border-[#dee2e6]">
             <div className="text-xs text-[#6c757d] max-w-sm">
-              <span className="font-semibold text-[#495057] block mb-1">Billing Math Guarantee:</span>
               <p className="text-[11px] leading-relaxed">
-                Line total = (Quantity × Unit Price - Discount) + Tax. Rounded half up to 2 decimal places per line.
+                Thank you for your business. For any billing queries, please contact billing@brightloop.com.
               </p>
               {invoice.notes && <p className="mt-2 text-[11px] text-[#495057] italic">{invoice.notes}</p>}
             </div>

@@ -54,10 +54,7 @@ export function AppNavbar({ onToggleSidebar }: AppNavbarProps) {
             <RefreshCw className="w-4 h-4 text-[#f8f9fa]" />
           </div>
           <div className="flex items-center gap-2">
-            <span className="font-bold text-base tracking-tight text-[#212529]">SubHub</span>
-            <span className="text-[10px] font-semibold bg-[#e9ecef] text-[#343a40] border border-[#ced4da] px-2 py-0.5 rounded-full uppercase tracking-wider">
-              Brightloop
-            </span>
+            <span className="font-bold text-base tracking-tight text-[#212529]">Brightloop</span>
           </div>
         </Link>
       </div>

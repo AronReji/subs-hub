@@ -28,12 +28,8 @@ export function DashboardLayout({
               {children}
             </main>
             <footer className="border-t border-[#dee2e6] bg-white py-4 px-6 text-xs text-[#6c757d] flex flex-col sm:flex-row items-center justify-between gap-2 shadow-xs">
-              <div>SubHub • Brightloop Subscription Management System (Light Steel)</div>
-              <div className="flex items-center gap-3 text-[#6c757d]">
-                <span>FastAPI & PostgreSQL Backend Ready</span>
-                <span>•</span>
-                <span>Role Based Security</span>
-              </div>
+              <div>Brightloop • Subscription Management Platform</div>
+              <div>© 2026 Brightloop Software. All rights reserved.</div>
             </footer>
           </div>
         </div>

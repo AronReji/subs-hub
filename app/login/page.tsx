@@ -51,7 +51,7 @@ export default function LoginPage() {
         <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#343a40] via-[#495057] to-[#212529] flex items-center justify-center mx-auto shadow-md shadow-[#343a40]/20">
           <RefreshCw className="w-6 h-6 text-[#f8f9fa]" />
         </div>
-        <h2 className="mt-4 text-2xl font-bold tracking-tight text-[#212529]">SubHub Brightloop</h2>
+        <h2 className="mt-4 text-2xl font-bold tracking-tight text-[#212529]">Brightloop</h2>
         <p className="mt-1 text-xs text-[#6c757d]">
           Unified Subscription & Recurring Billing Management
         </p>

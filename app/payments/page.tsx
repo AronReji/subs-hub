@@ -90,7 +90,6 @@ export default function PaymentsPage() {
         <PageHeader
           title="Payments Registry"
           description="Track incoming customer payments across Cash, Card, Bank Transfer, UPI, and Other channels. Payments update invoice balances automatically."
-          badge="Shared: Admin & Staff"
           actions={
             <button
               onClick={() => setIsModalOpen(true)}
