@@ -82,7 +82,6 @@ export default function FinanceDashboardPage() {
         <PageHeader
           title="Finance Dashboard"
           description="Consolidated overview of recurring revenue, active subscription cohorts, outstanding receivables, and computed overdue invoices."
-          badge="Shared: Admin & Staff"
           actions={
             <div className="flex items-center gap-2">
               <span className="text-xs text-[#6c757d] hidden sm:inline">Billing Cycle Engine:</span>
@@ -191,40 +190,70 @@ export default function FinanceDashboardPage() {
 
         {/* Trajectory Chart and Pipeline Summary */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 bg-white border border-[#dee2e6] rounded-2xl p-5 shadow-xs">
-            <div className="flex items-center justify-between mb-4">
+          <div className="lg:col-span-2 bg-white border border-[#dee2e6] rounded-2xl p-5 shadow-xs min-w-0">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
               <div>
                 <h3 className="text-sm font-semibold text-[#212529]">Monthly Recurring Revenue Trajectory</h3>
-                <p className="text-xs text-[#6c757d]">Historical performance across all billed subscription plans</p>
+                <p className="text-xs text-[#6c757d]">Historical revenue trend and cohort performance across billed contracts</p>
               </div>
-              <span className="text-xs font-medium text-[#343a40] bg-[#e9ecef] px-2.5 py-1 rounded-lg border border-[#ced4da]">
-                FastAPI / DB Synced
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-[#137333] bg-[#e6f4ea] px-2.5 py-1 rounded-lg border border-[#ceead6]">
+                  Latest: $46,800/mo
+                </span>
+                <span className="text-xs font-medium text-[#343a40] bg-[#e9ecef] px-2.5 py-1 rounded-lg border border-[#ced4da]">
+                  +64.8% Growth
+                </span>
+              </div>
             </div>
-            <div className="h-64 w-full">
+
+            <div className="h-[280px] w-full min-w-0">
               {mounted ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={revenueTrend}>
+                <ResponsiveContainer width="100%" height={280}>
+                  <AreaChart data={revenueTrend} margin={{ top: 10, right: 15, left: -10, bottom: 0 }}>
                     <defs>
                       <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#343a40" stopOpacity={0.25} />
-                        <stop offset="95%" stopColor="#343a40" stopOpacity={0.0} />
+                        <stop offset="5%" stopColor="#343a40" stopOpacity={0.35} />
+                        <stop offset="95%" stopColor="#343a40" stopOpacity={0.03} />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#dee2e6" />
-                    <XAxis dataKey="month" stroke="#6c757d" fontSize={11} />
-                    <YAxis stroke="#6c757d" fontSize={11} tickFormatter={(val) => `$${val / 1000}k`} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e9ecef" vertical={false} />
+                    <XAxis
+                      dataKey="month"
+                      stroke="#6c757d"
+                      fontSize={11}
+                      tick={{ fill: "#495057", fontSize: 11 }}
+                      tickLine={false}
+                    />
+                    <YAxis
+                      stroke="#6c757d"
+                      fontSize={11}
+                      width={58}
+                      tick={{ fill: "#495057", fontSize: 11 }}
+                      tickLine={false}
+                      domain={[20000, 50000]}
+                      tickFormatter={(val) => `$${(val / 1000).toFixed(0)}k`}
+                    />
                     <Tooltip
-                      contentStyle={{ backgroundColor: "#212529", color: "#f8f9fa", borderColor: "#343a40", borderRadius: "8px" }}
-                      formatter={(value) => [`$${Number(value).toLocaleString()}`, "Revenue"]}
+                      contentStyle={{
+                        backgroundColor: "#ffffff",
+                        borderColor: "#ced4da",
+                        borderRadius: "12px",
+                        boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
+                        padding: "10px 14px",
+                      }}
+                      itemStyle={{ color: "#212529", fontWeight: 700, fontSize: "13px" }}
+                      labelStyle={{ color: "#495057", fontWeight: 600, fontSize: "11px", marginBottom: "4px" }}
+                      formatter={(value) => [`$${Number(value).toLocaleString()}`, "Monthly Revenue"]}
                     />
                     <Area
                       type="monotone"
                       dataKey="revenue"
-                      stroke="#343a40"
-                      strokeWidth={2}
+                      stroke="#212529"
+                      strokeWidth={3}
                       fillOpacity={1}
                       fill="url(#colorRev)"
+                      dot={{ r: 4, fill: "#212529", stroke: "#ffffff", strokeWidth: 2 }}
+                      activeDot={{ r: 6, fill: "#343a40", stroke: "#ffffff", strokeWidth: 2 }}
                     />
                   </AreaChart>
                 </ResponsiveContainer>
@@ -234,6 +263,19 @@ export default function FinanceDashboardPage() {
                 </div>
               )}
             </div>
+
+            {/* Monthly Breakdown Data Pills */}
+            <div className="mt-4 pt-3 border-t border-[#dee2e6] grid grid-cols-3 sm:grid-cols-6 gap-2 text-center">
+              {revenueTrend.map((item) => (
+                <div key={item.month} className="p-2 rounded-xl bg-[#f8f9fa] border border-[#dee2e6]">
+                  <div className="text-[10px] text-[#6c757d] uppercase tracking-wider">{item.month}</div>
+                  <div className="text-xs font-bold font-mono text-[#212529] mt-0.5">
+                    ${(item.revenue / 1000).toFixed(1)}k
+                  </div>
+                  <div className="text-[10px] text-[#137333] font-medium">{item.subscriptions} subs</div>
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* Quick Links & Status Workflows */}
@@ -241,7 +283,7 @@ export default function FinanceDashboardPage() {
             <div>
               <h3 className="text-sm font-semibold text-[#212529] mb-1">Business Workflow Rules</h3>
               <p className="text-xs text-[#6c757d] mb-4">
-                SubHub strict lifecycle state machines.
+                Brightloop subscription and billing state machines.
               </p>
 
               <div className="space-y-3">

@@ -70,9 +70,9 @@ export default function ForgotPasswordPage() {
                 <CheckCircle2 className="w-5 h-5" />
               </div>
               <div>
-                <h4 className="text-sm font-semibold text-[#212529]">Reset Link Ready (Mock Email)</h4>
+                <h4 className="text-sm font-semibold text-[#212529]">Password Reset Link</h4>
                 <p className="text-xs text-[#6c757d] mt-1">
-                  In accordance with the deadline build specification, email dispatch is mocked and the link is generated below:
+                  A secure reset link has been generated for your registered account:
                 </p>
               </div>
 

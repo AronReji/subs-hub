@@ -46,7 +46,7 @@ export default function ResetPasswordPage() {
         </div>
         <h2 className="mt-4 text-2xl font-bold tracking-tight text-[#212529]">Create New Password</h2>
         <p className="mt-1 text-xs text-[#6c757d]">
-          Enter a compliant password for your SubHub account
+          Enter a compliant password for your Brightloop account
         </p>
       </div>
 

@@ -113,8 +113,7 @@ export default function AdminTemplatesPage() {
     <div className="space-y-6">
       <PageHeader
         title="Quotation Templates"
-        description="Standardized proposals pre-populated with plans, variant lines, and validity windows to accelerate sales rep quotation creation."
-        badge="Admin Only"
+        description="Standardized proposals pre-populated with plans, variant lines, and validity windows to accelerate quotation creation."
         actions={
           <button
             onClick={openCreateModal}
@@ -169,8 +168,7 @@ export default function AdminTemplatesPage() {
                 </div>
               </div>
 
-              <div className="mt-5 pt-3 border-t border-[#dee2e6] flex items-center justify-between">
-                <span className="text-[11px] text-[#6c757d]">Sales Workflow Template</span>
+              <div className="mt-5 pt-3 border-t border-[#dee2e6] flex items-center justify-end">
                 <Link
                   href={`/subscriptions/new?templateId=${tmpl.id}`}
                   className="inline-flex items-center gap-1 text-xs font-semibold text-[#343a40] hover:text-[#212529] hover:underline"

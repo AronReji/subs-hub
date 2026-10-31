@@ -67,8 +67,7 @@ export default function CustomersPage() {
       <div className="space-y-6">
         <PageHeader
           title="Customer Accounts"
-          description="Enterprise customer registry. Staff and Admins can create customer profiles for enterprise accounts."
-          badge="Shared: Admin & Staff"
+          description="Enterprise customer registry for managing accounts, contacts, and contract relationships."
           actions={
             <button
               onClick={() => setIsModalOpen(true)}

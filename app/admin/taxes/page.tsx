@@ -88,8 +88,7 @@ export default function AdminTaxesPage() {
     <div className="space-y-6">
       <PageHeader
         title="Tax Rules & Jurisdictions"
-        description="Admin-only tax policies. Automatically calculated on net line amounts (Line Total minus Discount) during recurring billing cycles."
-        badge="Admin Only"
+        description="Configure tax policies calculated automatically on net line amounts during recurring billing cycles."
         actions={
           <button
             onClick={openCreateModal}
@@ -131,8 +130,8 @@ export default function AdminTaxesPage() {
             </div>
 
             <div className="mt-5 pt-3 border-t border-[#dee2e6] flex items-center justify-between text-[11px] text-[#6c757d]">
-              <span>Jurisdiction: Corporate B2B</span>
-              <span className="font-mono">Formula: (Amt - Disc) × {tax.rate}%</span>
+              <span>Standard Rule</span>
+              <span className="font-mono">{tax.rate}% applied automatically</span>
             </div>
           </div>
         ))}

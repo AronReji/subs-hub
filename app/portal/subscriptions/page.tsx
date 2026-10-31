@@ -6,7 +6,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { Subscription } from "@/lib/types";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Plus } from "lucide-react";
 import Link from "next/link";
 
 export default function CustomerPortalSubscriptionsPage() {
@@ -39,7 +39,15 @@ export default function CustomerPortalSubscriptionsPage() {
       <PageHeader
         title="My Subscriptions"
         description="View and manage active software licenses, service tiers, and contract renewal dates."
-        badge="Customer Self-Service"
+        actions={
+          <Link
+            href="/portal/plans"
+            className="inline-flex items-center gap-2 bg-[#343a40] hover:bg-[#212529] text-[#f8f9fa] text-xs font-semibold px-4 py-2 rounded-xl shadow-xs transition-all cursor-pointer"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>Purchase New Plan</span>
+          </Link>
+        }
       />
 
       <div className="bg-white border border-[#dee2e6] rounded-2xl overflow-hidden shadow-xs">

@@ -38,7 +38,6 @@ export default function CustomerPortalInvoicesPage() {
       <PageHeader
         title="My Invoices & Receipts"
         description="Review billing statements, verify tax charges, pay online, and print official statements."
-        badge="Customer Self-Service"
       />
 
       <div className="bg-white border border-[#dee2e6] rounded-2xl overflow-hidden shadow-xs">

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { RoleGuard } from "@/components/layout/RoleGuard";
-import { RefreshCw, Layers, FileText, LogOut } from "lucide-react";
+import { RefreshCw, Layers, FileText, ShoppingBag, LogOut } from "lucide-react";
 
 export default function CustomerPortalLayout({
   children,
@@ -26,7 +26,7 @@ export default function CustomerPortalLayout({
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-bold text-base tracking-tight text-[#212529]">SubHub</span>
+                <span className="font-bold text-base tracking-tight text-[#212529]">Brightloop</span>
                 <span className="text-[10px] font-semibold bg-[#e9ecef] text-[#343a40] border border-[#ced4da] px-2 py-0.5 rounded-full uppercase tracking-wider">
                   Customer Portal
                 </span>
@@ -35,6 +35,17 @@ export default function CustomerPortalLayout({
           </div>
 
           <nav className="flex items-center gap-2">
+            <Link
+              href="/portal/plans"
+              className={`flex items-center gap-2 text-xs font-medium px-3.5 py-2 rounded-xl transition-all ${
+                pathname.startsWith("/portal/plans")
+                  ? "bg-[#343a40] text-[#f8f9fa] font-semibold"
+                  : "text-[#495057] hover:text-[#212529] hover:bg-[#e9ecef]"
+              }`}
+            >
+              <ShoppingBag className="w-4 h-4" />
+              <span>Purchase Plans</span>
+            </Link>
             <Link
               href="/portal/subscriptions"
               className={`flex items-center gap-2 text-xs font-medium px-3.5 py-2 rounded-xl transition-all ${
@@ -79,7 +90,7 @@ export default function CustomerPortalLayout({
         </main>
 
         <footer className="border-t border-[#dee2e6] bg-white py-4 px-6 text-xs text-[#6c757d] text-center shadow-xs">
-          SubHub Customer Portal • Self-Service Subscriptions &amp; Invoices
+          Brightloop Customer Portal • Subscriptions &amp; Invoices
         </footer>
       </div>
     </RoleGuard>

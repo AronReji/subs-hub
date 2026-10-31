@@ -86,7 +86,6 @@ export default function CustomerPortalInvoiceDetailPage({ params }: PageProps) {
           <PageHeader
             title={`Invoice ${invoice.invoiceNumber}`}
             description={`Contract: ${invoice.subscriptionNumber}`}
-            badge="Customer Self-Service"
           />
         </div>
 

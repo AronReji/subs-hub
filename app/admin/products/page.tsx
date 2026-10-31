@@ -84,7 +84,6 @@ export default function AdminProductsPage() {
       <PageHeader
         title="Products & Variants"
         description="Configure software licenses, hardware items, and brand add-on variants with extra prices."
-        badge="Admin Only"
         actions={
           <button
             onClick={openCreateModal}

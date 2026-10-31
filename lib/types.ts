@@ -1,4 +1,4 @@
-// Authoritative Domain Types for SubHub (Brightloop Subscription Management System)
+// Authoritative Domain Types for Brightloop Subscription Management System
 
 export type Role = "ADMIN" | "STAFF" | "CUSTOMER";
 

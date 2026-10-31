@@ -151,7 +151,6 @@ function InvoicesListContent() {
       <PageHeader
         title="Invoices & Recurring Billing"
         description="Invoices auto-created from active subscriptions. Never billed twice or skipped. Supports tax rules, discounts, and payment tracking."
-        badge="Shared: Admin & Staff"
         actions={
           <div className="flex items-center gap-3">
             <button

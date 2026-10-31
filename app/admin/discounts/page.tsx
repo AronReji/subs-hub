@@ -126,8 +126,7 @@ export default function AdminDiscountsPage() {
     <div className="space-y-6">
       <PageHeader
         title="Discounts & Promotions"
-        description="Admin-only policies. Configured discounts automatically apply on subsequent invoices and cease once expired or reaching usage thresholds."
-        badge="Admin Only"
+        description="Configure promotional rules that automatically apply to eligible invoices and contracts."
         actions={
           <button
             onClick={openCreateModal}
@@ -213,7 +212,7 @@ export default function AdminDiscountsPage() {
 
             <div className="mt-5 pt-3 border-t border-[#dee2e6] text-[10px] text-[#6c757d] flex justify-between">
               <span>Valid: {disc.startDate} to {disc.endDate}</span>
-              <span>Billing Priority: Discount applied first</span>
+              <span>Auto-applied before tax</span>
             </div>
           </div>
         ))}

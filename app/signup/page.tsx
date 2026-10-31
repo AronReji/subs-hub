@@ -26,7 +26,7 @@ export default function SignupPage() {
       const res = await signup(name, email, password, company);
       if (res.success) {
         toast.success("Account Created Successfully", {
-          description: "Welcome to SubHub! Redirecting to your Customer Portal...",
+          description: "Welcome to Brightloop! Redirecting to your Customer Portal...",
         });
         router.push("/portal/subscriptions");
       } else {

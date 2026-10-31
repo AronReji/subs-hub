@@ -1,5 +1,5 @@
-// Centralized API Client for SubHub (Brightloop Subscription Management System)
-// Matches FastAPI backend conventions:
+// Centralized API Client for Brightloop Subscription Management System
+// Matches REST API backend conventions:
 // - Prefix: /api/v1/
 // - Endpoints: plural lowercase URLs with hyphens
 // - Action subroutes: POST /subscriptions/{id}/confirm, POST /invoices/{id}/payments
@@ -53,7 +53,7 @@ class LocalStore {
   constructor() {
     if (typeof window !== "undefined") {
       try {
-        const stored = localStorage.getItem("subhub_store_v1");
+        const stored = localStorage.getItem("brightloop_store_v1");
         if (stored) {
           const parsed = JSON.parse(stored);
           this.staff = parsed.staff || this.staff;
@@ -77,7 +77,7 @@ class LocalStore {
     if (typeof window !== "undefined") {
       try {
         localStorage.setItem(
-          "subhub_store_v1",
+          "brightloop_store_v1",
           JSON.stringify({
             staff: this.staff,
             products: this.products,
@@ -323,6 +323,17 @@ export const api = {
     const inv = store.invoices.find((i) => i.id === id);
     if (!inv) throw new Error("Invoice not found");
     return { data: inv };
+  },
+
+  async createInvoice(invoiceData: Omit<Invoice, "id" | "invoiceNumber">): Promise<ApiResponse<Invoice>> {
+    const newInvoice: Invoice = {
+      ...invoiceData,
+      id: `inv-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      invoiceNumber: `INV-2026-${String(store.invoices.length + 1).padStart(3, "0")}`,
+    };
+    store.invoices.unshift(newInvoice);
+    store.save();
+    return { data: newInvoice };
   },
 
   async updateInvoiceStatus(id: string, status: InvoiceStatus): Promise<ApiResponse<Invoice>> {

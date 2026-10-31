@@ -130,7 +130,6 @@ export default function AdminPlansPage() {
       <PageHeader
         title="Subscription Plans & Cadences"
         description="Configure pricing, billing intervals (Daily, Weekly, Monthly, Yearly), minimum seat limits, and lifecycle flags (auto-close, pausable, renewable)."
-        badge="Admin Only"
         actions={
           <button
             onClick={openCreateModal}
