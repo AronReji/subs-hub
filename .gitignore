@@ -31,3 +31,13 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# python
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.sqlite
+*.sqlite3
+*.db
