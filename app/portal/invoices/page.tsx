@@ -6,7 +6,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { api, isInvoiceOverdue } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { Invoice } from "@/lib/types";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, FileText, ShoppingBag } from "lucide-react";
 import Link from "next/link";
 
 export default function CustomerPortalInvoicesPage() {
@@ -18,12 +18,26 @@ export default function CustomerPortalInvoicesPage() {
     async function loadInvoices() {
       try {
         const res = await api.getInvoices();
-        const own = res.data.filter(
-          (i) =>
-            i.customerName.toLowerCase() === user?.name.toLowerCase() ||
-            i.customerCompany.toLowerCase() === (user as any)?.companyName?.toLowerCase()
-        );
-        setInvoices(own.length > 0 ? own : res.data.slice(0, 2));
+        const userEmail = user?.email?.toLowerCase().trim();
+        const userName = user?.name?.toLowerCase().trim();
+        const userId = user?.id;
+
+        // Customer portal: ONLY show invoices belonging to this customer
+        const own = res.data.filter((i) => {
+          if (userId && (i.customerId === userId || i.customerId === `cust-${userId}`)) {
+            return true;
+          }
+          if (userEmail && i.customerEmail && i.customerEmail.toLowerCase().trim() === userEmail) {
+            return true;
+          }
+          if (userName && i.customerName && i.customerName.toLowerCase().trim() === userName) {
+            return true;
+          }
+          return false;
+        });
+
+        // New customers start with empty invoices until they purchase a plan
+        setInvoices(own);
       } catch {
         // ignore
       } finally {
@@ -41,30 +55,43 @@ export default function CustomerPortalInvoicesPage() {
       />
 
       <div className="bg-white border border-[#dee2e6] rounded-2xl overflow-hidden shadow-xs">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-[#f1f3f5] text-[#495057] uppercase tracking-wider text-[11px] border-b border-[#dee2e6]">
-              <tr>
-                <th className="py-3 px-4 font-semibold">Invoice #</th>
-                <th className="py-3 px-4 font-semibold">Contract Ref</th>
-                <th className="py-3 px-4 font-semibold">Issue Date</th>
-                <th className="py-3 px-4 font-semibold">Due Date</th>
-                <th className="py-3 px-4 font-semibold">Total Amount</th>
-                <th className="py-3 px-4 font-semibold">Status</th>
-                <th className="py-3 px-4 font-semibold text-right">View / Pay</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#dee2e6] text-[#495057]">
-              {isLoading ? (
+        {isLoading ? (
+          <div className="p-12 text-center text-xs text-[#6c757d]">
+            Loading invoice records...
+          </div>
+        ) : invoices.length === 0 ? (
+          <div className="text-center py-16 px-4">
+            <div className="w-14 h-14 rounded-2xl bg-[#f1f3f5] border border-[#dee2e6] flex items-center justify-center mx-auto mb-4 text-[#6c757d]">
+              <FileText className="w-7 h-7 text-[#495057]" />
+            </div>
+            <h3 className="text-base font-semibold text-[#212529]">No Invoices Yet</h3>
+            <p className="text-xs text-[#6c757d] max-w-sm mx-auto mt-1 mb-6 leading-relaxed">
+              As a new customer, you do not have any invoices or payment receipts yet. When you purchase a subscription plan, your billing statements will be recorded here.
+            </p>
+            <Link
+              href="/portal/plans"
+              className="inline-flex items-center gap-2 bg-[#343a40] hover:bg-[#212529] text-[#f8f9fa] text-xs font-semibold px-5 py-2.5 rounded-xl transition-all shadow-xs"
+            >
+              <ShoppingBag className="w-4 h-4" />
+              <span>Explore Plans Catalog</span>
+            </Link>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead className="bg-[#f1f3f5] text-[#495057] uppercase tracking-wider text-[11px] border-b border-[#dee2e6]">
                 <tr>
-                  <td colSpan={7} className="py-8 text-center text-[#6c757d]">Loading invoice records...</td>
+                  <th className="py-3 px-4 font-semibold">Invoice #</th>
+                  <th className="py-3 px-4 font-semibold">Contract Ref</th>
+                  <th className="py-3 px-4 font-semibold">Issue Date</th>
+                  <th className="py-3 px-4 font-semibold">Due Date</th>
+                  <th className="py-3 px-4 font-semibold">Total Amount</th>
+                  <th className="py-3 px-4 font-semibold">Status</th>
+                  <th className="py-3 px-4 font-semibold text-right">View / Pay</th>
                 </tr>
-              ) : invoices.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="py-8 text-center text-[#6c757d]">No invoices found.</td>
-                </tr>
-              ) : (
-                invoices.map((inv) => {
+              </thead>
+              <tbody className="divide-y divide-[#dee2e6] text-[#495057]">
+                {invoices.map((inv) => {
                   const isOverdue = isInvoiceOverdue(inv);
 
                   return (
@@ -104,11 +131,11 @@ export default function CustomerPortalInvoicesPage() {
                       </td>
                     </tr>
                   );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );

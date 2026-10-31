@@ -6,7 +6,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { Subscription } from "@/lib/types";
-import { ChevronRight, Plus } from "lucide-react";
+import { ChevronRight, Plus, Layers, ShoppingBag } from "lucide-react";
 import Link from "next/link";
 
 export default function CustomerPortalSubscriptionsPage() {
@@ -18,13 +18,26 @@ export default function CustomerPortalSubscriptionsPage() {
     async function loadData() {
       try {
         const res = await api.getSubscriptions();
-        // Customer view: view own subscriptions per spec
-        const own = res.data.filter(
-          (s) =>
-            s.customerEmail.toLowerCase() === user?.email.toLowerCase() ||
-            s.customerName.toLowerCase() === user?.name.toLowerCase()
-        );
-        setSubscriptions(own.length > 0 ? own : res.data.slice(0, 2));
+        const userEmail = user?.email?.toLowerCase().trim();
+        const userName = user?.name?.toLowerCase().trim();
+        const userId = user?.id;
+
+        // Customer portal: ONLY show subscriptions purchased by this customer
+        const own = res.data.filter((s) => {
+          if (userEmail && s.customerEmail && s.customerEmail.toLowerCase().trim() === userEmail) {
+            return true;
+          }
+          if (userId && (s.customerId === userId || s.customerId === `cust-${userId}`)) {
+            return true;
+          }
+          if (userName && s.customerName && s.customerName.toLowerCase().trim() === userName) {
+            return true;
+          }
+          return false;
+        });
+
+        // New customers start with empty subscriptions until they make a purchase
+        setSubscriptions(own);
       } catch {
         // ignore
       } finally {
@@ -51,30 +64,43 @@ export default function CustomerPortalSubscriptionsPage() {
       />
 
       <div className="bg-white border border-[#dee2e6] rounded-2xl overflow-hidden shadow-xs">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-[#f1f3f5] text-[#495057] uppercase tracking-wider text-[11px] border-b border-[#dee2e6]">
-              <tr>
-                <th className="py-3 px-4 font-semibold">Subscription #</th>
-                <th className="py-3 px-4 font-semibold">Service / Plan</th>
-                <th className="py-3 px-4 font-semibold">Billing Frequency</th>
-                <th className="py-3 px-4 font-semibold">Next Invoice Date</th>
-                <th className="py-3 px-4 font-semibold">Amount</th>
-                <th className="py-3 px-4 font-semibold">Status</th>
-                <th className="py-3 px-4 font-semibold text-right">Details</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#dee2e6] text-[#495057]">
-              {isLoading ? (
+        {isLoading ? (
+          <div className="p-12 text-center text-xs text-[#6c757d]">
+            Loading subscriptions...
+          </div>
+        ) : subscriptions.length === 0 ? (
+          <div className="text-center py-16 px-4">
+            <div className="w-14 h-14 rounded-2xl bg-[#f1f3f5] border border-[#dee2e6] flex items-center justify-center mx-auto mb-4 text-[#6c757d]">
+              <Layers className="w-7 h-7 text-[#495057]" />
+            </div>
+            <h3 className="text-base font-semibold text-[#212529]">No Subscriptions Yet</h3>
+            <p className="text-xs text-[#6c757d] max-w-sm mx-auto mt-1 mb-6 leading-relaxed">
+              As a new customer, you do not have any active subscriptions or service plans. Explore our catalog to choose a plan and start your subscription.
+            </p>
+            <Link
+              href="/portal/plans"
+              className="inline-flex items-center gap-2 bg-[#343a40] hover:bg-[#212529] text-[#f8f9fa] text-xs font-semibold px-5 py-2.5 rounded-xl transition-all shadow-xs"
+            >
+              <ShoppingBag className="w-4 h-4" />
+              <span>Browse &amp; Purchase Plans</span>
+            </Link>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead className="bg-[#f1f3f5] text-[#495057] uppercase tracking-wider text-[11px] border-b border-[#dee2e6]">
                 <tr>
-                  <td colSpan={7} className="py-8 text-center text-[#6c757d]">Loading subscriptions...</td>
+                  <th className="py-3 px-4 font-semibold">Subscription #</th>
+                  <th className="py-3 px-4 font-semibold">Service / Plan</th>
+                  <th className="py-3 px-4 font-semibold">Billing Frequency</th>
+                  <th className="py-3 px-4 font-semibold">Next Invoice Date</th>
+                  <th className="py-3 px-4 font-semibold">Amount</th>
+                  <th className="py-3 px-4 font-semibold">Status</th>
+                  <th className="py-3 px-4 font-semibold text-right">Details</th>
                 </tr>
-              ) : subscriptions.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="py-8 text-center text-[#6c757d]">No active subscriptions found.</td>
-                </tr>
-              ) : (
-                subscriptions.map((sub) => (
+              </thead>
+              <tbody className="divide-y divide-[#dee2e6] text-[#495057]">
+                {subscriptions.map((sub) => (
                   <tr key={sub.id} className="hover:bg-[#f8f9fa] transition-colors">
                     <td className="py-3.5 px-4 font-mono font-semibold text-[#212529]">
                       <Link href={`/portal/subscriptions/${sub.id}`} className="hover:underline text-[#343a40]">
@@ -102,11 +128,11 @@ export default function CustomerPortalSubscriptionsPage() {
                       </Link>
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );

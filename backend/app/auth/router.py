@@ -19,8 +19,9 @@ from app.auth.dependencies import Principal, get_current_user, require_permissio
 from app.auth.models import User
 from app.auth.permissions import Permission, permissions_for
 from app.auth.schemas import (
-    DataResponse, ForgotPasswordRequest, LoginOut, LoginRequest, MeOut, MessageOut,
-    PagedResponse, ResetPasswordRequest, SignupRequest, StaffCreateRequest, UserOut,
+    CustomerCreateRequest, CustomerOut, DataResponse, ForgotPasswordRequest,
+    LoginOut, LoginRequest, MeOut, MessageOut, PagedResponse, ResetPasswordRequest,
+    SignupRequest, StaffCreateRequest, UserOut,
 )
 from app.auth.tokens import create_access_token
 from app.database import get_db
@@ -36,16 +37,60 @@ def signup(body: SignupRequest, db: Session = Depends(get_db)):
     more than 8 characters with an uppercase letter, a lowercase letter and
     a special character.
     """
-    user = service.signup_customer(db, body.full_name, body.email, body.password)
+    user = service.signup_customer(
+        db,
+        body.full_name,
+        body.email,
+        body.password,
+        company_name=body.company_name,
+        device_id=body.device_id,
+        device_name=body.device_name,
+    )
     return {"data": user}
 
 
 @router.post("/login", response_model=DataResponse[LoginOut], summary="Log in")
 def login(body: LoginRequest, db: Session = Depends(get_db)):
     """Exchange email + password for a Bearer access token."""
-    user = service.authenticate(db, body.email, body.password)
+    user = service.authenticate(
+        db,
+        body.email,
+        body.password,
+        device_id=body.device_id,
+        device_name=body.device_name,
+    )
     token, expires_in = create_access_token(user)
     return {"data": {"access_token": token, "expires_in": expires_in, "user": user}}
+
+
+@router.get("/customers", response_model=PagedResponse[CustomerOut], summary="List customers")
+def list_customers(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(DEFAULT_PAGE_SIZE, ge=1, le=MAX_PAGE_SIZE),
+    db: Session = Depends(get_db),
+):
+    """List registered customers in the database."""
+    rows, total = service.list_customers(db, page, page_size)
+    return {"data": rows, "page": page, "page_size": page_size, "total": total}
+
+
+@router.post("/customers", response_model=DataResponse[CustomerOut], summary="Add or update customer")
+def create_customer(
+    body: CustomerCreateRequest,
+    db: Session = Depends(get_db),
+):
+    """Add customer details to the database."""
+    customer = service.ensure_customer_record(
+        db,
+        name=body.name,
+        email=body.email,
+        company_name=body.company_name,
+        phone=body.phone,
+        address=body.address,
+        device_id=body.device_id,
+        device_name=body.device_name,
+    )
+    return {"data": customer}
 
 
 @router.get("/me", response_model=DataResponse[MeOut], summary="Current user")

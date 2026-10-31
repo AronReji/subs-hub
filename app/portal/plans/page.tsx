@@ -231,6 +231,7 @@ export default function CustomerPortalPlansStorePage() {
         subscriptionNumber: subRes.data.subscriptionNumber,
         customerId: user.id,
         customerName: user.name,
+        customerEmail: user.email,
         customerCompany: (user as any).companyName || "Apex Tech Labs",
         subtotal,
         discountAmount: discountDeduction,

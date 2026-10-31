@@ -30,6 +30,12 @@ class Customer(Base):
     # NOT unique on purpose: the unique rule lives on users.email, because the
     # document says "each email can belong to only one account".
     email: Mapped[str] = mapped_column(String(254), index=True)
+    company_name: Mapped[Optional[str]] = mapped_column(String(150), nullable=True)
+    phone: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    address: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    device_id: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    device_name: Mapped[Optional[str]] = mapped_column(String(150), nullable=True)
+    last_login: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
 
 

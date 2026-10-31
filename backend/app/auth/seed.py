@@ -18,9 +18,9 @@ load_dotenv()
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.auth.models import User
+from app.auth.models import Customer, User
 from app.auth.password import hash_password, validate_password_strength
-from app.database import Base, SessionLocal, engine
+from app.database import Base, SessionLocal, engine, migrate_sqlite_columns
 from app.enums import Role
 
 
@@ -50,14 +50,67 @@ def ensure_admin(
     return admin
 
 
+def ensure_customer(
+    db: Session,
+    email: str,
+    password: str,
+    full_name: str,
+    company_name: str = "Apex Tech Labs Inc.",
+    phone: str = "+1 (555) 019-2834",
+    address: str = "452 Innovation Blvd, Austin, TX",
+) -> User:
+    """Create a demo customer account if missing and ensure customer details in DB."""
+    email = email.strip().lower()
+    existing_user = db.scalar(select(User).where(User.email == email))
+
+    customer = db.scalar(select(Customer).where(Customer.email == email))
+    if customer is None:
+        customer = Customer(
+            name=full_name,
+            email=email,
+            company_name=company_name,
+            phone=phone,
+            address=address,
+        )
+        db.add(customer)
+        db.flush()
+
+    if existing_user is not None:
+        if existing_user.customer_id is None:
+            existing_user.customer_id = customer.id
+            db.commit()
+        return existing_user
+
+    user = User(
+        email=email,
+        password_hash=hash_password(password),
+        full_name=full_name,
+        role=Role.CUSTOMER,
+        customer_id=customer.id,
+    )
+    db.add(user)
+    db.commit()
+    return user
+
+
 def seed_from_env() -> Optional[User]:
-    """Read ADMIN_EMAIL / ADMIN_PASSWORD from the environment and ensure that admin exists."""
-    email = os.getenv("ADMIN_EMAIL")
-    password = os.getenv("ADMIN_PASSWORD")
-    if not email or not password:
-        return None
+    """Read ADMIN_EMAIL / ADMIN_PASSWORD from the environment and ensure essential accounts exist."""
+    migrate_sqlite_columns()
+    admin_email = os.getenv("ADMIN_EMAIL", "admin@brightloop.com")
+    admin_password = os.getenv("ADMIN_PASSWORD", "Admin@123!")
+
     with SessionLocal() as db:
-        return ensure_admin(db, email, password)
+        admin = ensure_admin(db, admin_email, admin_password, "Administrator")
+        ensure_customer(
+            db,
+            "customer@apexlabs.com",
+            "Admin@123!",
+            "Alex Rivera",
+            "Apex Tech Labs Inc.",
+            "+1 (555) 019-2834",
+            "452 Innovation Blvd, Austin, TX",
+        )
+        return admin
 
 
 if __name__ == "__main__":

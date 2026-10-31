@@ -13,13 +13,14 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.auth import register_exception_handlers, router as auth_router
 from app.auth.seed import seed_from_env
-from app.database import Base, engine
+from app.database import Base, engine, migrate_sqlite_columns
 
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
-    """Startup: create tables (demo shortcut, use Alembic migrations later) and the first admin."""
+    """Startup: create tables (demo shortcut, use Alembic migrations later) and essential seed data."""
     Base.metadata.create_all(engine)
+    migrate_sqlite_columns()
     seed_from_env()
     yield
 

@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
-import { RefreshCw, Lock, Mail, AlertCircle, ArrowRight } from "lucide-react";
+import { RefreshCw, Lock, Mail, AlertCircle, ArrowRight, Laptop, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 
 export default function LoginPage() {
@@ -12,7 +12,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, deviceInfo, isRecognizedDevice, lastRecognizedUser } = useAuth();
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -65,6 +65,35 @@ export default function LoginPage() {
               Enter your credentials to access your dashboard.
             </p>
           </div>
+
+          {isRecognizedDevice && deviceInfo && (
+            <div className="p-3 bg-[#e8f0fe] border border-[#d2e3fc] rounded-xl flex items-center justify-between text-xs text-[#1a73e8]">
+              <div className="flex items-center gap-2">
+                <Laptop className="w-4 h-4 shrink-0 text-[#1a73e8]" />
+                <div>
+                  <div className="font-semibold text-[#1a73e8] flex items-center gap-1.5">
+                    <span>Recognized Device</span>
+                    <span className="text-[10px] bg-[#ceead6] text-[#0d652d] font-semibold px-1.5 py-0.2 rounded">COOKIE VERIFIED</span>
+                  </div>
+                  <div className="text-[11px] text-[#495057] mt-0.5">
+                    {deviceInfo.deviceName}
+                    {lastRecognizedUser && (
+                      <span> • Last user: <strong className="text-[#212529]">{lastRecognizedUser.name}</strong></span>
+                    )}
+                  </div>
+                </div>
+              </div>
+              {lastRecognizedUser && (
+                <button
+                  type="button"
+                  onClick={() => fillDemo(lastRecognizedUser.email, lastRecognizedUser.role)}
+                  className="text-[11px] font-semibold text-[#1a73e8] hover:underline shrink-0 ml-2 cursor-pointer"
+                >
+                  Autofill
+                </button>
+              )}
+            </div>
+          )}
 
           {error && (
             <div className="p-3 bg-[#fce8e6] border border-[#fad2cf] rounded-xl flex items-start gap-2.5 text-xs text-[#c5221f]">

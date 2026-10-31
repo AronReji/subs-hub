@@ -4,6 +4,19 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { User, Role } from "./types";
 import { mockUsers } from "./mock-data";
+import { api } from "./api";
+import {
+  DeviceInfo,
+  RecognizedUser,
+  detectDeviceInfo,
+  getOrSetDeviceId,
+  getSavedDeviceInfo,
+  getUserSessionCookie,
+  setUserSessionCookie,
+  clearUserSessionCookie,
+  getLastRecognizedUser,
+  isDeviceRecognized,
+} from "./cookies";
 
 interface AuthContextType {
   user: User | null;
@@ -12,6 +25,10 @@ interface AuthContextType {
   permissions: string[];
   isAuthenticated: boolean;
   isLoading: boolean;
+  deviceId: string;
+  deviceInfo: DeviceInfo | null;
+  isRecognizedDevice: boolean;
+  lastRecognizedUser: RecognizedUser | null;
   login: (email: string, password: string) => Promise<{ success: boolean; role?: Role; error?: string }>;
   signup: (
     name: string,
@@ -51,18 +68,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [permissions, setPermissions] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Cookie and Device recognition state
+  const [deviceId, setDeviceId] = useState<string>("");
+  const [deviceInfo, setDeviceInfo] = useState<DeviceInfo | null>(null);
+  const [isDeviceKnown, setIsDeviceKnown] = useState<boolean>(false);
+  const [lastUser, setLastUser] = useState<RecognizedUser | null>(null);
+
   const router = useRouter();
 
-  // Load session from storage on client mount
+  // Initialize device cookies & session on client mount
   useEffect(() => {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (parsed.user && parsed.token) {
-          setUser(parsed.user);
-          setToken(parsed.token);
-          setPermissions(parsed.user.permissions || []);
+      // 1. Initialize persistent device cookies
+      const devId = getOrSetDeviceId();
+      const detectedInfo = detectDeviceInfo();
+      setDeviceId(devId);
+      setDeviceInfo(detectedInfo);
+      setIsDeviceKnown(isDeviceRecognized());
+      setLastUser(getLastRecognizedUser());
+
+      // 2. Load session from cookie first, then fallback to localStorage
+      const cookieSession = getUserSessionCookie();
+      if (cookieSession?.user && cookieSession?.token) {
+        setUser(cookieSession.user);
+        setToken(cookieSession.token);
+        setPermissions(cookieSession.user.permissions || []);
+      } else {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (parsed.user && parsed.token) {
+            setUser(parsed.user);
+            setToken(parsed.token);
+            setPermissions(parsed.user.permissions || []);
+            // Sync session back into cookie
+            setUserSessionCookie(parsed.user, parsed.token);
+          }
         }
       }
     } catch {
@@ -72,14 +114,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  // Save session when user changes
+  // Save session across both cookies and localStorage
   const saveSession = (newUser: User | null, newToken: string | null) => {
     setUser(newUser);
     setToken(newToken);
     setPermissions(newUser?.permissions || []);
+
     if (newUser && newToken) {
+      setUserSessionCookie(newUser, newToken);
       localStorage.setItem(STORAGE_KEY, JSON.stringify({ user: newUser, token: newToken }));
+      setLastUser({
+        id: newUser.id,
+        email: newUser.email,
+        name: newUser.name,
+        role: newUser.role,
+      });
+      setIsDeviceKnown(true);
     } else {
+      clearUserSessionCookie();
       localStorage.removeItem(STORAGE_KEY);
     }
   };
@@ -91,13 +143,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     const cleanEmail = email.trim().toLowerCase();
+    const currentDeviceId = deviceId || getOrSetDeviceId();
+    const currentDeviceName = deviceInfo?.deviceName || detectDeviceInfo().deviceName;
 
     // 1. Attempt real API login against FastAPI auth backend (/api/v1/auth/login)
     try {
       const res = await fetch(`${API_BASE}/api/v1/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: cleanEmail, password }),
+        body: JSON.stringify({
+          email: cleanEmail,
+          password,
+          device_id: currentDeviceId,
+          device_name: currentDeviceName,
+        }),
       });
 
       if (res.ok) {
@@ -127,7 +186,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           createdAt: apiUser.created_at || new Date().toISOString(),
           customerId: apiUser.customer_id,
           permissions: userPermissions,
+          deviceId: currentDeviceId,
+          deviceName: currentDeviceName,
         };
+
+        // When logging in as a customer: ensure customer details are saved in the DB
+        if (appUser.role === "CUSTOMER") {
+          await api.ensureCustomerRecord({
+            id: appUser.customerId ? `cust-${appUser.customerId}` : `cust-${appUser.id}`,
+            name: appUser.name,
+            email: appUser.email,
+            companyName: (apiUser as any).company_name || `${appUser.name} Org`,
+            deviceId: currentDeviceId,
+            deviceName: currentDeviceName,
+          });
+        }
 
         saveSession(appUser, access_token);
         return { success: true, role: appUser.role };
@@ -147,8 +220,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       const mockToken = `jwt_${foundUser.role.toLowerCase()}_${Date.now()}`;
-      saveSession(foundUser, mockToken);
-      return { success: true, role: foundUser.role };
+      const appUser: User = {
+        ...foundUser,
+        deviceId: currentDeviceId,
+        deviceName: currentDeviceName,
+      };
+
+      if (appUser.role === "CUSTOMER") {
+        await api.ensureCustomerRecord({
+          id: appUser.customerId ? `cust-${appUser.customerId}` : `cust-${appUser.id}`,
+          name: appUser.name,
+          email: appUser.email,
+          companyName: appUser.companyName || `${appUser.name} Org`,
+          deviceId: currentDeviceId,
+          deviceName: currentDeviceName,
+        });
+      }
+
+      saveSession(appUser, mockToken);
+      return { success: true, role: appUser.role };
     }
   };
 
@@ -164,13 +254,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     const cleanEmail = email.trim().toLowerCase();
+    const currentDeviceId = deviceId || getOrSetDeviceId();
+    const currentDeviceName = deviceInfo?.deviceName || detectDeviceInfo().deviceName;
 
     // 1. Attempt real API signup against FastAPI auth backend (/api/v1/auth/signup)
     try {
       const res = await fetch(`${API_BASE}/api/v1/auth/signup`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ full_name: name.trim(), email: cleanEmail, password }),
+        body: JSON.stringify({
+          full_name: name.trim(),
+          email: cleanEmail,
+          password,
+          company_name: company?.trim(),
+          device_id: currentDeviceId,
+          device_name: currentDeviceName,
+        }),
       });
 
       if (res.ok) {
@@ -184,8 +283,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           isActive: apiUser.is_active ?? true,
           createdAt: apiUser.created_at || new Date().toISOString(),
           customerId: apiUser.customer_id,
+          companyName: company?.trim() || `${name.trim()} Org`,
+          deviceId: currentDeviceId,
+          deviceName: currentDeviceName,
         };
-        // Auto-login or store session
+
+        // Guarantee customer details are saved in customer DB
+        await api.ensureCustomerRecord({
+          id: appUser.customerId ? `cust-${appUser.customerId}` : `cust-${appUser.id}`,
+          name: appUser.name,
+          email: appUser.email,
+          companyName: company?.trim() || `${appUser.name} Org`,
+          deviceId: currentDeviceId,
+          deviceName: currentDeviceName,
+        });
+
+        // Auto-login & store session in cookies
         const mockToken = `jwt_customer_${Date.now()}`;
         saveSession(appUser, mockToken);
         return { success: true };
@@ -208,9 +321,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         role: "CUSTOMER",
         isActive: true,
         createdAt: new Date().toISOString(),
+        companyName: company?.trim() || `${name.trim()} Org`,
+        deviceId: currentDeviceId,
+        deviceName: currentDeviceName,
       };
 
       mockUsers.push(newUser);
+
+      await api.ensureCustomerRecord({
+        id: newUser.id,
+        name: newUser.name,
+        email: newUser.email,
+        companyName: company?.trim() || `${newUser.name} Org`,
+        deviceId: currentDeviceId,
+        deviceName: currentDeviceName,
+      });
+
       const mockToken = `jwt_customer_${Date.now()}`;
       saveSession(newUser, mockToken);
       return { success: true };
@@ -287,6 +413,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         permissions,
         isAuthenticated: !!user,
         isLoading,
+        deviceId,
+        deviceInfo,
+        isRecognizedDevice: isDeviceKnown,
+        lastRecognizedUser: lastUser,
         login,
         signup,
         forgotPassword,

@@ -328,6 +328,54 @@ export const api = {
     return { data: newCustomer };
   },
 
+  async ensureCustomerRecord(customerData: {
+    id?: string;
+    name: string;
+    email: string;
+    companyName?: string;
+    phone?: string;
+    address?: string;
+    deviceId?: string;
+    deviceName?: string;
+  }): Promise<Customer> {
+    const cleanEmail = customerData.email.trim().toLowerCase();
+    const existingIdx = store.customers.findIndex(
+      (c) => c.email.toLowerCase() === cleanEmail
+    );
+
+    if (existingIdx !== -1) {
+      store.customers[existingIdx] = {
+        ...store.customers[existingIdx],
+        name: customerData.name || store.customers[existingIdx].name,
+        companyName: customerData.companyName || store.customers[existingIdx].companyName,
+        phone: customerData.phone || store.customers[existingIdx].phone,
+        address: customerData.address || store.customers[existingIdx].address,
+        deviceId: customerData.deviceId || store.customers[existingIdx].deviceId,
+        deviceName: customerData.deviceName || store.customers[existingIdx].deviceName,
+        lastLogin: new Date().toISOString(),
+      };
+      store.save();
+      return store.customers[existingIdx];
+    } else {
+      const newCustomer: Customer = {
+        id: customerData.id || `cust-${Date.now()}`,
+        name: customerData.name,
+        email: cleanEmail,
+        companyName: customerData.companyName || `${customerData.name} Org`,
+        phone: customerData.phone || "+1 (555) 000-0000",
+        address: customerData.address || "Online Registered Account",
+        status: "ACTIVE",
+        deviceId: customerData.deviceId,
+        deviceName: customerData.deviceName,
+        lastLogin: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
+      };
+      store.customers.unshift(newCustomer);
+      store.save();
+      return newCustomer;
+    }
+  },
+
   // Subscriptions
   async getSubscriptions(statusFilter?: SubscriptionStatus): Promise<ApiListResponse<Subscription>> {
     let list = store.subscriptions;

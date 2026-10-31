@@ -34,6 +34,9 @@ class SignupRequest(BaseModel):
     full_name: str = Field(min_length=1, max_length=120)
     email: str
     password: str
+    company_name: Optional[str] = None
+    device_id: Optional[str] = None
+    device_name: Optional[str] = None
 
     @field_validator("full_name")
     @classmethod
@@ -56,6 +59,8 @@ class StaffCreateRequest(SignupRequest):
 class LoginRequest(BaseModel):
     email: str
     password: str
+    device_id: Optional[str] = None
+    device_name: Optional[str] = None
 
     @field_validator("email")
     @classmethod
@@ -77,7 +82,37 @@ class ResetPasswordRequest(BaseModel):
     new_password: str
 
 
+class CustomerCreateRequest(BaseModel):
+    name: str = Field(min_length=1, max_length=120)
+    email: str
+    company_name: Optional[str] = None
+    phone: Optional[str] = None
+    address: Optional[str] = None
+    device_id: Optional[str] = None
+    device_name: Optional[str] = None
+
+    @field_validator("email")
+    @classmethod
+    def _check_email(cls, v: str) -> str:
+        return _clean_email(v)
+
+
 # --------------------------------------------------------------- responses
+class CustomerOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    name: str
+    email: str
+    company_name: Optional[str] = None
+    phone: Optional[str] = None
+    address: Optional[str] = None
+    device_id: Optional[str] = None
+    device_name: Optional[str] = None
+    last_login: Optional[datetime] = None
+    created_at: datetime
+
+
 class UserOut(BaseModel):
     """A user without any secret fields (no password hash, ever)."""
     model_config = ConfigDict(from_attributes=True)
@@ -86,7 +121,8 @@ class UserOut(BaseModel):
     email: str
     full_name: str
     role: Role
-    customer_id: Optional[int]
+    customer_id: Optional[int] = None
+    customer: Optional[CustomerOut] = None
     is_active: bool
     created_at: datetime
 

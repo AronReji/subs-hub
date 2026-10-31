@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { RoleGuard } from "@/components/layout/RoleGuard";
-import { RefreshCw, Layers, FileText, ShoppingBag, LogOut } from "lucide-react";
+import { RefreshCw, Layers, FileText, ShoppingBag, LogOut, Laptop } from "lucide-react";
 
 export default function CustomerPortalLayout({
   children,
@@ -13,7 +13,7 @@ export default function CustomerPortalLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const { user, logout } = useAuth();
+  const { user, logout, deviceInfo, isRecognizedDevice } = useAuth();
 
   return (
     <RoleGuard allowedRoles={["CUSTOMER", "ADMIN"]}>
@@ -71,6 +71,16 @@ export default function CustomerPortalLayout({
           </nav>
 
           <div className="flex items-center gap-3">
+            {isRecognizedDevice && deviceInfo && (
+              <div
+                className="hidden lg:flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-medium bg-[#e8f0fe] border border-[#d2e3fc] text-[#1a73e8]"
+                title={`Device ID: ${deviceInfo.deviceId}`}
+              >
+                <Laptop className="w-3.5 h-3.5 text-[#1a73e8]" />
+                <span>Device: {deviceInfo.deviceName}</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-[#1e8e3e]" title="Device recognized via cookies"></span>
+              </div>
+            )}
             <div className="text-right hidden sm:block">
               <div className="text-xs font-semibold text-[#212529]">{user?.name}</div>
               <div className="text-[11px] text-[#6c757d] font-mono">{user?.email}</div>

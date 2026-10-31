@@ -57,7 +57,15 @@ def _email_taken_error() -> AuthError:
 
 
 # ------------------------------------------------------------------- signup
-def signup_customer(db: Session, full_name: str, email: str, password: str) -> User:
+def signup_customer(
+    db: Session,
+    full_name: str,
+    email: str,
+    password: str,
+    company_name: Optional[str] = None,
+    device_id: Optional[str] = None,
+    device_name: Optional[str] = None,
+) -> User:
     """
     Public self-signup. Always creates a CUSTOMER and their customer record.
     There is deliberately no way to pick a role here, so nobody can sign
@@ -68,7 +76,14 @@ def signup_customer(db: Session, full_name: str, email: str, password: str) -> U
         raise _email_taken_error()
 
     try:
-        customer = Customer(name=full_name, email=email)
+        customer = Customer(
+            name=full_name,
+            email=email,
+            company_name=company_name or f"{full_name} Org",
+            device_id=device_id,
+            device_name=device_name,
+            last_login=utcnow(),
+        )
         db.add(customer)
         db.flush()  # assigns customer.id without committing yet
 
@@ -134,10 +149,18 @@ def list_staff(db: Session, page: int, page_size: int) -> Tuple[List[User], int]
 
 
 # -------------------------------------------------------------------- login
-def authenticate(db: Session, email: str, password: str) -> User:
+def authenticate(
+    db: Session,
+    email: str,
+    password: str,
+    device_id: Optional[str] = None,
+    device_name: Optional[str] = None,
+) -> User:
     """
     Check email + password. Wrong email and wrong password give the SAME
     error (and take similar time) so nobody can probe which emails exist.
+    Also ensures that if a customer logs in, their customer details and device
+    are stored and linked to the db.
     """
     user = db.scalar(select(User).where(User.email == email))
 
@@ -149,7 +172,100 @@ def authenticate(db: Session, email: str, password: str) -> User:
     if not user.is_active:
         # Only reached with the correct password, so this reveals nothing to strangers.
         raise AuthError(403, ErrorCode.ACCOUNT_DISABLED, "This account has been deactivated.")
+
+    # When logging in as a CUSTOMER: ensure customer details exist & device is recognized in DB
+    if user.role == Role.CUSTOMER:
+        customer = None
+        if user.customer_id is not None:
+            customer = db.get(Customer, user.customer_id)
+        if customer is None:
+            customer = db.scalar(select(Customer).where(Customer.email == user.email))
+
+        if customer is None:
+            # Create the customer record so it is permanently in DB
+            customer = Customer(
+                name=user.full_name,
+                email=user.email,
+                company_name=f"{user.full_name} Org",
+                device_id=device_id,
+                device_name=device_name,
+                last_login=utcnow(),
+            )
+            db.add(customer)
+            db.flush()
+            user.customer_id = customer.id
+        else:
+            # Update device recognition and last login
+            if device_id:
+                customer.device_id = device_id
+            if device_name:
+                customer.device_name = device_name
+            customer.last_login = utcnow()
+            if user.customer_id != customer.id:
+                user.customer_id = customer.id
+
+        db.commit()
+        db.refresh(user)
+
     return user
+
+
+# ---------------------------------------------------------------- customers
+def list_customers(db: Session, page: int = 1, page_size: int = 50) -> Tuple[List[Customer], int]:
+    """Paginated list of registered customers."""
+    total = db.scalar(select(func.count()).select_from(Customer)) or 0
+    rows = db.scalars(
+        select(Customer)
+        .order_by(Customer.id.desc())
+        .offset((page - 1) * page_size)
+        .limit(page_size)
+    ).all()
+    return list(rows), total
+
+
+def ensure_customer_record(
+    db: Session,
+    name: str,
+    email: str,
+    company_name: Optional[str] = None,
+    phone: Optional[str] = None,
+    address: Optional[str] = None,
+    device_id: Optional[str] = None,
+    device_name: Optional[str] = None,
+) -> Customer:
+    """Add customer details to DB or update existing."""
+    clean_email = email.strip().lower()
+    customer = db.scalar(select(Customer).where(Customer.email == clean_email))
+    if customer:
+        if name:
+            customer.name = name.strip()
+        if company_name:
+            customer.company_name = company_name.strip()
+        if phone:
+            customer.phone = phone.strip()
+        if address:
+            customer.address = address.strip()
+        if device_id:
+            customer.device_id = device_id
+        if device_name:
+            customer.device_name = device_name
+        customer.last_login = utcnow()
+    else:
+        customer = Customer(
+            name=name.strip(),
+            email=clean_email,
+            company_name=company_name.strip() if company_name else f"{name} Org",
+            phone=phone.strip() if phone else None,
+            address=address.strip() if address else None,
+            device_id=device_id,
+            device_name=device_name,
+            last_login=utcnow(),
+        )
+        db.add(customer)
+
+    db.commit()
+    db.refresh(customer)
+    return customer
 
 
 # ----------------------------------------------------------- password reset

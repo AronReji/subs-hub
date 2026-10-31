@@ -31,6 +31,9 @@ export interface User {
   createdAt: string;
   customerId?: number | null;
   permissions?: string[];
+  companyName?: string;
+  deviceId?: string;
+  deviceName?: string;
 }
 
 export interface ProductVariant {
@@ -115,6 +118,10 @@ export interface Customer {
   companyName: string;
   phone?: string;
   address?: string;
+  status?: "ACTIVE" | "ARCHIVED";
+  deviceId?: string;
+  deviceName?: string;
+  lastLogin?: string;
   createdAt: string;
 }
 
@@ -173,6 +180,7 @@ export interface Invoice {
   subscriptionNumber: string;
   customerId: string;
   customerName: string;
+  customerEmail?: string;
   customerCompany: string;
   subtotal: number;
   discountAmount: number;
