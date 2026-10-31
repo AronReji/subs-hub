@@ -1,20 +1,24 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, Suspense } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { validatePassword } from "@/lib/auth-context";
+import { useRouter, useSearchParams } from "next/navigation";
+import { validatePassword, useAuth } from "@/lib/auth-context";
 import { RefreshCw, Lock, AlertCircle, ArrowRight, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 
-export default function ResetPasswordPage() {
+function ResetPasswordContent() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [isDone, setIsDone] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const token = searchParams.get("token") || "demo_token";
+  const { resetPassword } = useAuth();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
@@ -29,13 +33,25 @@ export default function ResetPasswordPage() {
       return;
     }
 
-    setIsDone(true);
-    toast.success("Password Updated Successfully", {
-      description: "You can now log in with your new credentials.",
-    });
-    setTimeout(() => {
-      router.push("/login");
-    }, 1500);
+    setIsLoading(true);
+    try {
+      const res = await resetPassword(token, newPassword);
+      if (res.success) {
+        setIsDone(true);
+        toast.success("Password Updated Successfully", {
+          description: res.message || "You can now log in with your new credentials.",
+        });
+        setTimeout(() => {
+          router.push("/login");
+        }, 1500);
+      } else {
+        setError(res.error || "Failed to reset password.");
+      }
+    } catch {
+      setError("An unexpected error occurred.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -100,9 +116,10 @@ export default function ResetPasswordPage() {
 
               <button
                 type="submit"
-                className="w-full flex items-center justify-center gap-2 bg-[#343a40] hover:bg-[#212529] text-[#f8f9fa] font-semibold py-2.5 px-4 rounded-xl text-xs shadow-xs transition-all cursor-pointer"
+                disabled={isLoading}
+                className="w-full flex items-center justify-center gap-2 bg-[#343a40] hover:bg-[#212529] text-[#f8f9fa] font-semibold py-2.5 px-4 rounded-xl text-xs shadow-xs transition-all cursor-pointer disabled:opacity-50"
               >
-                <span>Save New Password</span>
+                <span>{isLoading ? "Saving..." : "Save New Password"}</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </form>
@@ -126,5 +143,13 @@ export default function ResetPasswordPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#f8f9fa] flex items-center justify-center text-xs text-[#6c757d]">Loading...</div>}>
+      <ResetPasswordContent />
+    </Suspense>
   );
 }

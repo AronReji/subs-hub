@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import { useAuth } from "@/lib/auth-context";
 import { RefreshCw, Mail, ArrowRight, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -9,18 +10,31 @@ export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [mockResetLink, setMockResetLink] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const { forgotPassword } = useAuth();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
 
-    const token = `reset_${Math.random().toString(36).substring(2, 10)}`;
-    const link = `/reset-password?token=${token}&email=${encodeURIComponent(email)}`;
-    setMockResetLink(link);
-    setIsSubmitted(true);
-    toast.success("Password Reset Link Generated (Mocked)", {
-      description: `Reset token created for ${email}.`,
-    });
+    setIsLoading(true);
+    try {
+      const res = await forgotPassword(email);
+      if (res.success) {
+        const link = res.resetLink || `/reset-password?email=${encodeURIComponent(email)}`;
+        setMockResetLink(link);
+        setIsSubmitted(true);
+        toast.success("Password Reset Initiated", {
+          description: res.message || `Reset instructions processed for ${email}.`,
+        });
+      } else {
+        toast.error(res.error || "Failed to process password reset request.");
+      }
+    } catch {
+      toast.error("An unexpected error occurred.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -58,9 +72,10 @@ export default function ForgotPasswordPage() {
 
               <button
                 type="submit"
-                className="w-full flex items-center justify-center gap-2 bg-[#343a40] hover:bg-[#212529] text-[#f8f9fa] font-semibold py-2.5 px-4 rounded-xl text-xs shadow-xs transition-all cursor-pointer"
+                disabled={isLoading}
+                className="w-full flex items-center justify-center gap-2 bg-[#343a40] hover:bg-[#212529] text-[#f8f9fa] font-semibold py-2.5 px-4 rounded-xl text-xs shadow-xs transition-all cursor-pointer disabled:opacity-50"
               >
-                <span>Send Password Reset Link</span>
+                <span>{isLoading ? "Processing..." : "Send Password Reset Link"}</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </form>

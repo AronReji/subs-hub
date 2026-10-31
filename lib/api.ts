@@ -112,10 +112,86 @@ export function isInvoiceOverdue(invoice: Invoice): boolean {
 // -------------------------------------------------------------
 // Centralized API Client methods
 // -------------------------------------------------------------
+function getAuthToken(): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem("brightloop_auth_session_v1");
+    return raw ? JSON.parse(raw).token : null;
+  } catch {
+    return null;
+  }
+}
+
 export const api = {
   // Staff
   async getStaff(): Promise<ApiListResponse<User>> {
+    try {
+      const token = getAuthToken();
+      const res = await fetch(`${API_BASE_URL}/api/v1/auth/staff`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (res.ok) {
+        const json = await res.json();
+        const users: User[] = (json.data || []).map((u: any) => ({
+          id: String(u.id),
+          name: u.full_name || u.name,
+          email: u.email,
+          role: u.role,
+          isActive: u.is_active ?? true,
+          createdAt: u.created_at || new Date().toISOString(),
+        }));
+        return { data: users, page: json.page || 1, page_size: json.page_size || users.length, total: json.total || users.length };
+      }
+    } catch {
+      // fallback to store
+    }
     return { data: store.staff, page: 1, page_size: store.staff.length, total: store.staff.length };
+  },
+
+  async addStaff(staffData: { name: string; email: string; role: "STAFF"; password?: string }): Promise<ApiResponse<User>> {
+    try {
+      const token = getAuthToken();
+      const res = await fetch(`${API_BASE_URL}/api/v1/auth/staff`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          full_name: staffData.name,
+          email: staffData.email,
+          password: staffData.password || "Staff@123!",
+        }),
+      });
+      if (res.ok) {
+        const json = await res.json();
+        const u = json.data;
+        const newUser: User = {
+          id: String(u.id),
+          name: u.full_name,
+          email: u.email,
+          role: u.role,
+          isActive: u.is_active ?? true,
+          createdAt: u.created_at || new Date().toISOString(),
+        };
+        store.staff.push(newUser);
+        store.save();
+        return { data: newUser };
+      }
+    } catch {
+      // fallback to store
+    }
+    const newUser: User = {
+      id: `usr-staff-${Date.now()}`,
+      name: staffData.name,
+      email: staffData.email,
+      role: staffData.role,
+      isActive: true,
+      createdAt: new Date().toISOString(),
+    };
+    store.staff.push(newUser);
+    store.save();
+    return { data: newUser };
   },
 
   async addStaff(staffData: { name: string; email: string; role: "STAFF" }): Promise<ApiResponse<User>> {

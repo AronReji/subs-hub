@@ -29,6 +29,8 @@ export interface User {
   role: Role;
   isActive: boolean;
   createdAt: string;
+  customerId?: number | null;
+  permissions?: string[];
 }
 
 export interface ProductVariant {
