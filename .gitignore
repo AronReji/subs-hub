@@ -23,14 +23,12 @@ yarn-debug.log*
 yarn-error.log*
 
 # local env files
-.env*.local
 
 # vercel
 .vercel
 
 # typescript
 *.tsbuildinfo
-next-env.d.ts
 
 # python
 venv/
@@ -40,4 +38,3 @@ __pycache__/
 .pytest_cache/
 *.sqlite
 *.sqlite3
-*.db
