@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "backend:dev": "backend\\.venv\\Scripts\\uvicorn app.main:app --reload --app-dir backend",
+    "backend:test": "backend\\.venv\\Scripts\\pytest backend/tests",
+    "backend:seed": "cd backend && .venv\\Scripts\\python -m app.auth.seed"
   },
   "dependencies": {
     "lucide-react": "^1.65.0",

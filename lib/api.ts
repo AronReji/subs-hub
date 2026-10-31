@@ -194,19 +194,6 @@ export const api = {
     return { data: newUser };
   },
 
-  async addStaff(staffData: { name: string; email: string; role: "STAFF" }): Promise<ApiResponse<User>> {
-    const newUser: User = {
-      id: `usr-staff-${Date.now()}`,
-      name: staffData.name,
-      email: staffData.email,
-      role: staffData.role,
-      isActive: true,
-      createdAt: new Date().toISOString(),
-    };
-    store.staff.push(newUser);
-    store.save();
-    return { data: newUser };
-  },
 
   // Products
   async getProducts(): Promise<ApiListResponse<Product>> {
